@@ -1,0 +1,70 @@
+pipeline {
+    agent any
+
+    tools {
+        jdk 'jdk21'
+        nodejs 'nodejs'
+    }
+
+    stages {
+        stage('Clean Workspace') {
+            steps {
+                cleanWs()
+            }
+        }
+
+        stage('Git Checkout') {
+            steps {
+                git 'https://github.com/jyoti3011/Zomato.git'
+            }
+        }
+
+        stage('Install NPM Dependencies') {
+            steps {
+                sh 'npm install'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t zomato .'
+            }
+        }
+
+        stage('Docker Build & Push') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'DOCKER_HUB_PASWD', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+                    sh "docker login -u $USER -p $PASS"
+                    sh "docker tag zomato jyoti1130/zomatoapp"
+                    sh "docker push jyoti1130/zomatoapp"
+                }
+            }
+        }
+
+        stage('Deploy Container') {
+            steps {
+                sh """
+                if docker ps -a --format '{{.Names}}' | grep -w zomato >/dev/null; then
+                    echo "Removing existing container..."
+                    docker rm -f zomato
+                fi
+                echo "Starting new container..."
+                docker run -d --name zomato -p 3000:3000 jyoti1130/zomatoapp
+                """
+            }
+        }
+
+        stage('Config & Deployment') {
+            steps {
+                withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'AWS-ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                    dir('terraform-files') {
+                        sh 'sudo chmod 600 mykey.pem'
+                        sh 'terraform init'
+                        sh 'terraform validate'
+                        sh 'terraform apply --auto-approve'
+                    }
+                }
+            }
+        }
+    }
+}
