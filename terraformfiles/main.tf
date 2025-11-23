@@ -3,6 +3,7 @@ resource "aws_instance" "test-server" {
   instance_type = "t3.small"
   key_name = "mykey"
   vpc_security_group_ids = ["sg-04e68324954420b79"]
+  subnet_id     = "subnet-00c28ab624e059fac"
   connection {
      type = "ssh"
      user = "ec2-user"
