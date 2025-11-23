@@ -13,4 +13,4 @@
     command : sudo systemctl start docker
 
   - name: Deploy Docker Container
-    command: docker run -itd -p 8084:8081 jyoti1130/zomatoapp
+    command: docker run -d --name zomato  -p 3000:3000 jyoti1130/zomatoapp
