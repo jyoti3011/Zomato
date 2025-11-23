@@ -94,7 +94,7 @@ pipeline {
                     secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
                 ]]) {
 
-                    dir('terraform-files') {
+                    dir('terraformfiles') {
 
                         sh """
                         chmod 600 mykey.pem
